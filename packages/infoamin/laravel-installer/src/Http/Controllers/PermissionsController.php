@@ -59,26 +59,26 @@ class PermissionsController extends PermissionsChecker
             return view('packages.installer.purchasecode', ['bypass' => $request->bypass]);
         }
 
-        $validator = Validator::make($request->all(), [
-            'envatopurchasecode' => 'required',
-            'envatoUsername' => 'required'
-        ]);
-        $validator->setAttributeNames([
-            'envatopurchasecode' => 'Purchase code',
-            'envatoUsername' => 'Envato Username'
-        ]);
+        // $validator = Validator::make($request->all(), [
+        //     'envatopurchasecode' => 'nullable',
+        //     'envatoUsername' => 'nullable'
+        // ]);
+        // $validator->setAttributeNames([
+        //     'envatopurchasecode' => 'Purchase code',
+        //     'envatoUsername' => 'Envato Username'
+        // ]);
 
-        if ($validator->fails()) {
-            return view('packages.installer.purchasecode', ['errors' => $validator->errors(), 'bypass' => $request->bypass]);
-        }
+        // if ($validator->fails()) {
+        //     return view('packages.installer.purchasecode', ['errors' => $validator->errors(), 'bypass' => $request->bypass]);
+        // }
 
-        $domainName     = str_replace(['https://www.', 'http://www.', 'https://', 'http://', 'www.'], '', request()->getHttpHost());
-        $domainIp       = request()->ip();
+        // $domainName     = str_replace(['https://www.', 'http://www.', 'https://', 'http://', 'www.'], '', request()->getHttpHost());
+        // $domainIp       = request()->ip();
 
-        $purchaseData = $purchaseChecker->getPurchaseStatus($domainName, $domainIp, $request->envatopurchasecode, $request->envatoUsername);
+        // $purchaseData = $purchaseChecker->getPurchaseStatus($domainName, $domainIp, $request->envatopurchasecode, $request->envatoUsername);
 
         // if ($purchaseData->status) {
-        Env::set(base64_decode('SU5TVEFMTF9BUFBfU0VDUkVU'),'abc');
+        Env::set(base64_decode('SU5TVEFMTF9BUFBfU0VDUkVU'), 'abc');
         Env::set('APP_URL', url('/'));
         if ($request->bypass == 'purchase_code') {
             Env::set('APP_INSTALL', 'true');
