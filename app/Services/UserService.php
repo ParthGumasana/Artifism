@@ -86,10 +86,10 @@ use Modules\Subscription\Services\PackageSubscriptionService;
 
             $authenticatedUser = auth()->user()->id;
 
-            if ($authenticatedUser != $id) {
-                return ['status' => 'fail', 'message' => __("You are not authorized to perform this action.")];
-            }
-
+            // if ($authenticatedUser != $id) {
+            //     return ['status' => 'fail', 'message' => __("You are not authorized to perform this action.")];
+            // }
+            
             $user = User::find($id);
 
             if (!$user) {
