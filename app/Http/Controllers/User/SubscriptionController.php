@@ -27,7 +27,6 @@ use Modules\Subscription\Entities\{
     Package,
     SubscriptionDetails,
     PackageSubscription
-    
 };
 
 class SubscriptionController extends Controller
@@ -45,7 +44,7 @@ class SubscriptionController extends Controller
      * @var object
      */
     protected $packageSubscriptionService;
-    
+
     /**
      * Coupon Service
      *
@@ -87,7 +86,7 @@ class SubscriptionController extends Controller
         $data['features'] = $package['features'];
         $data['subscription'] = $package['subscription'];
         $data['billingCycles'] = $this->billingCycle($package['packages']);
-        
+
         $data['credits'] = Credit::whereNot('type', 'default')->activeStatus()->sortOrder()->get();
 
 
@@ -132,22 +131,22 @@ class SubscriptionController extends Controller
         }
         Package::where(['status' => 'Active', 'id' => $request->package_id])->firstOrFail();
         $subscription = subscription('getUserSubscription', auth()->user()->id);
-        
+
         if ($subscription && $subscription->status == 'Active' && str_contains(strtolower($subscription->activeDetail()?->payment_method), 'recurring')) {
             return redirect()->route('user.package')->withErrors(__('Please cancel your current subscription to activate another.'));
         }
-        
+
         if (!isset($request->billing_cycle) || !in_array($request->billing_cycle, ['days', 'weekly', 'monthly', 'yearly', 'lifetime'])) {
             return back()->withErrors(__('Invalid billing cycle provided'));
         }
-        
+
         if ($subscription) {
             return $this->updateSubscription($request);
         }
-        
+
         try {
             $paymentType = $this->packageSubscriptionService->paymentType($request->billing_cycle, $request->package_id);
-            
+
             DB::beginTransaction();
             $response = $this->packageSubscriptionService->storePackage($request->package_id, Auth::user()?->id, $request->billing_cycle);
 
@@ -155,13 +154,13 @@ class SubscriptionController extends Controller
                 throw new \Exception(__('Subscription fail.'));
             }
             $packageSubscriptionDetails = $this->packageSubscriptionService->storeSubscriptionDetails();
-            
+
             $price = $packageSubscriptionDetails->billing_price - $this->couponService->getDiscountAmount($request->package_id, auth()->user()->id, $request->billing_cycle);
-            if (!$packageSubscriptionDetails->is_trial && $price == 0 ) {
+            if (!$packageSubscriptionDetails->is_trial && $price == 0) {
                 $this->packageSubscriptionService->activatedSubscription($packageSubscriptionDetails->id);
                 $this->couponService->storeCouponRedeem($packageSubscriptionDetails->id, $request->package_id, 'Active');
 
-                
+
                 if (isActive('Affiliate') && empty($subscription)) {
                     $package = Package::find($request->package_id);
                     $billed = $package->discount_price[$request->billing_cycle] > 0 ? $package->discount_price[$request->billing_cycle] : $package->sale_price[$request->billing_cycle];
@@ -222,7 +221,7 @@ class SubscriptionController extends Controller
             if (isActive('Affiliate')) {
                 \Modules\Affiliate\Entities\ReferralPurchase::purchase($response);
             }
-            
+
             Session::flash('success', __('You have successfully subscribed to your desired plan.'));
             return redirect()->route('user.package');
         } catch (\Exception $e) {
@@ -271,7 +270,7 @@ class SubscriptionController extends Controller
             $subscriptionDetails = SubscriptionDetails::where('id', $request->id)->first();
             $subscriptionDetails->update(['unique_code' => generateUniqueId()]);
             $subscriptionDetails = $subscriptionDetails->refresh();
-            
+
             if ($subscriptionDetails->status == 'Active' && str_contains(strtolower($subscriptionDetails->payment_method), 'recurring')) {
                 return redirect()->route('user.package')->withErrors(__('Please cancel you current subscription to activate other plan.'));
             }
@@ -282,20 +281,20 @@ class SubscriptionController extends Controller
                 if (!$package) {
                     return redirect()->route('user.package')->withErrors(__('The package is not available.'));
                 }
-    
+
                 $price = $package->discount_price[$subscriptionDetails->billing_cycle] > 0 ? $package->discount_price[$subscriptionDetails->billing_cycle] : $package->sale_price[$subscriptionDetails->billing_cycle];
-                
+
                 $price -= $this->couponService->getDiscountAmount($request->package_id, auth()->user()->id, $subscriptionDetails->billing_cycle);
             } else {
                 $credit = Credit::find($subscriptionDetails->package_id);
-                
+
                 if (!$credit) {
                     return redirect()->route('user.package')->withErrors(__('The plan is not available.'));
                 }
-                
+
                 $price = $credit->price;
             }
-            
+
             if ($price == 0) {
                 $this->packageSubscriptionService->activatedSubscription($subscriptionDetails->id);
                 $this->couponService->storeCouponRedeem($subscriptionDetails->id, $subscriptionDetails->package_id, 'Active');
@@ -330,19 +329,18 @@ class SubscriptionController extends Controller
         try {
 
             $response = $this->subscriptionService->paidPendingSubscription($request);
-            
+
             if (isActive('Affiliate') && $response->payment_status == 'Paid') {
                 DB::beginTransaction();
                 $affiliateResponse = \Modules\Affiliate\Entities\ReferralPurchase::referralPurchaseUpdate($response);
-                
+
                 if ($affiliateResponse) {
                     DB::commit();
                 } else {
                     DB::rollBack();
                 }
-                
             }
-            
+
 
             return redirect()->route('user.package')->withSuccess(__('Your subscription is update.'));
         } catch (\Exception $e) {
@@ -368,9 +366,9 @@ class SubscriptionController extends Controller
             $usedTrial = SubscriptionDetails::where(['package_subscription_id' => $subscription->id, 'is_trial' => 1, 'package_id' => $package->id])->first();
 
             $price = $package->discount_price[$request->billing_cycle] > 0 ? $package->discount_price[$request->billing_cycle] : $package->sale_price[$request->billing_cycle];
-            
+
             $price -= $this->couponService->getDiscountAmount($request->package_id, auth()->user()->id, $request->billing_cycle);
-            
+
 
             if ($price == 0) {
                 $response = $this->packageSubscriptionService->storePackage($request->package_id, auth()->user()->id, $request->billing_cycle);
@@ -424,19 +422,19 @@ class SubscriptionController extends Controller
             $this->memberPackageSessionSet();
 
             if (isActive('Affiliate')) {
-                
+
                 $subscriptionDetails = SubscriptionDetails::where('package_id', $response->package_id)->where('user_id', auth()->user()->id)->where('is_trial', 1)->first();
                 $totalTrailPlan = SubscriptionDetails::where('user_id', auth()->user()->id)->where('is_trial', 1)->count();
                 $totalPlan = SubscriptionDetails::where('id', '!=', $response->id)->where('user_id', auth()->user()->id)->count();
-                
+
                 if (!empty($subscriptionDetails) && $totalTrailPlan == 1 && $totalPlan == 1) {
                     $subscriptionDetails['amount_billed'] = $response->amount_billed;
-                   \Modules\Affiliate\Entities\ReferralPurchase::referralPurchaseUpdate($subscriptionDetails);
+                    \Modules\Affiliate\Entities\ReferralPurchase::referralPurchaseUpdate($subscriptionDetails);
                 } elseif ($totalTrailPlan == 1 && $totalPlan == 1) {
                     \Modules\Affiliate\Entities\ReferralPurchase::purchase($response);
                 }
             }
-            
+
             Session::flash('success', __('You have successfully subscribed to your desired plan.'));
             return redirect()->route('user.package');
         } catch (\Exception $e) {
@@ -445,6 +443,15 @@ class SubscriptionController extends Controller
         }
     }
 
+    public function getUserSubscription(int|null $userId = null, bool $newInstance = false): object|null
+    {
+        return $this->getSubscription($userId, 'user_id', $newInstance);
+    }
+
+    public function getSubscription(int $id, $type = 'id', bool $newInstance = false): object|null
+    {
+        return PackageSubscription::getInstance($type, $id, $newInstance);
+    }
 
     /**
      * Store credit data
@@ -460,9 +467,15 @@ class SubscriptionController extends Controller
         try {
             DB::beginTransaction();
             $price = $credit->price;
-            
+            $userId = auth()->user()->id;
+            $subscription = $this->getUserSubscription($userId);
+            // if user has no subscription active then give error
+            if (!$subscription || $subscription->status != 'Active') {
+                return redirect()->back()->withErrors(__('Please buy subscription first use credits topup plans.'));
+            }
+
             $price -= $this->couponService->getDiscountAmount($request->package_id, auth()->user()->id, 'onetime');
-            
+
             if ($price == 0) {
                 $response = $this->subscriptionService->storeFreeCredit($credit);
 
@@ -504,7 +517,7 @@ class SubscriptionController extends Controller
             if (isActive('Affiliate')) {
                 \Modules\Affiliate\Entities\ReferralPurchase::purchase($response);
             }
-            
+
             Session::flash('success', __('You have successfully purchase the plan.'));
             return redirect()->route('user.package');
         } catch (\Exception $e) {
@@ -512,7 +525,7 @@ class SubscriptionController extends Controller
             return redirect()->route('user.package');
         }
     }
-    
+
     /**
      * Checkout
      * 
@@ -522,23 +535,23 @@ class SubscriptionController extends Controller
     public function checkout(Request $request, CouponService $service)
     {
         $service->forgetCache($request->package_id, auth()->user()->id);
-        
+
         $data['plan'] = Package::find($request->package_id);
         $data['currency'] = Currency::getDefault();
         $data['price'] = 0;
-        
-        if (isset($request->billing_cycle) && in_array($request->billing_cycle, ['days', 'weekly', 'monthly', 'yearly', 'lifetime']) ) {
+
+        if (isset($request->billing_cycle) && in_array($request->billing_cycle, ['days', 'weekly', 'monthly', 'yearly', 'lifetime'])) {
             $data['price'] = $data['plan'] && $data['plan']['discount_price'][$request->billing_cycle] ? formatCurrencyAmount($data['plan']['discount_price'][$request->billing_cycle]) : formatCurrencyAmount($data['plan']['sale_price'][$request->billing_cycle] ?? 0);
         } elseif (isset($request->billing_cycle) && $request->billing_cycle == 'onetime') {
             $credit = Credit::find($request->package_id);
             $data['price'] = $credit ? formatCurrencyAmount($credit->price) : 0;
             $data['plan'] = $credit;
         }
-        
-        
+
+
         return view('site.checkout', $data);
     }
-    
+
     /**
      * Check and set coupon discount
      * 
@@ -549,16 +562,16 @@ class SubscriptionController extends Controller
     public function checkCouponDiscount(Request $request, CouponService $service)
     {
         $coupon = $service->setAll($request->code, $request->package_id, auth()->user()->id, $request->billing_cycle);
-        
+
         $couponResponse = $coupon->checkCouponValidity()->checkPlanValidity()->getResponse();
-        
+
         if ($couponResponse['status'] == 'fail') {
             return $couponResponse + [
                 'amount' => $coupon->getDiscountAmount(),
                 'data' => $coupon->getDiscount()
             ];
         }
-        
+
         return [
             'status' => 'success',
             'message' => __('Coupon applied successfully.'),
@@ -566,7 +579,7 @@ class SubscriptionController extends Controller
             'amount' => $coupon->getDiscountAmount()
         ];
     }
-    
+
     /**
      * Reset Discount
      * 
@@ -577,7 +590,7 @@ class SubscriptionController extends Controller
     public function resetDiscount(Request $request, CouponService $service)
     {
         $coupon = $service->setAll(null, $request->package_id, auth()->user()->id, $request->billing_cycle);
-        
+
         return $service->forgetCache($request->package_id, auth()->user()->id, $request->code)->getResponse() + [
             'amount' => $coupon->getDiscountAmount(),
             'data' => $coupon->getDiscount()
@@ -610,7 +623,7 @@ class SubscriptionController extends Controller
             }
         }
         return false;
-    }   
+    }
 
     /**
      * Team member package session set
@@ -623,18 +636,18 @@ class SubscriptionController extends Controller
         $memberData = Team::getMember($authData->id);
         if (!empty($memberData)) {
             $currentPackage = session()->get('memberPackageData');
-            if (!empty($currentPackage) && $currentPackage['packageUser']) {  
+            if (!empty($currentPackage) && $currentPackage['packageUser']) {
                 TeamMemberMeta::updateTeamMemberMeta($memberData->id, 'packageUserId', $authData->id);
                 $userData = ['packageUser' => $authData->id, 'packUserName' => $authData->name];
                 session()->put('memberPackageData', $userData);
-            }else {
+            } else {
                 $insertMeta[] = [
                     'team_id' => $memberData->id,
-                    'category'=> 'package',
+                    'category' => 'package',
                     'field'   => 'packageUserId',
                     'value'   => $authData->id,
                 ];
-                TeamMemberMeta::memberMetaInsert ($insertMeta);
+                TeamMemberMeta::memberMetaInsert($insertMeta);
                 $userData = ['packageUser' => $authData->id, 'packUserName' => $authData->name];
                 session()->put('memberPackageData', $userData);
             }
@@ -647,7 +660,8 @@ class SubscriptionController extends Controller
      *
      * @return array
      */
-    public function packages(){
+    public function packages()
+    {
         $packages = Package::getAll()->where('status', 'Active')->sortBy('sort_order');
 
         $prices = [];
@@ -666,12 +680,12 @@ class SubscriptionController extends Controller
         $buttonClass = "mt-[34px] text-white dark:text-color-14 text-16 font-semibold py-[13px] px-8 rounded-lg bg-color-14 dark:bg-white font-Figtree";
 
         /* button name  */
-        $priceColor1= "text-48 font-bold break-all";
-        $priceColor2= "text-48 font-bold heading-1 break-all";
+        $priceColor1 = "text-48 font-bold break-all";
+        $priceColor2 = "text-48 font-bold heading-1 break-all";
 
-        $allPackages= [];
+        $allPackages = [];
 
-        foreach( $packages as $package) {
+        foreach ($packages as $package) {
 
             $allPackages[] = [
                 'id' => $package->id,
@@ -705,7 +719,7 @@ class SubscriptionController extends Controller
                     if (isset($feature['value'])) {
                         $featureList[$feature['title']]['values'][$package['name']] = $feature['value'];
                     }
-                    
+
                     if (isset($featureList[$feature['title']]['is_value_fixed'])) {
                         $mainFeature[$feature['title']] = $featureList[$feature['title']];
                     } else {
@@ -716,22 +730,22 @@ class SubscriptionController extends Controller
                 }
 
                 $featureList[$feature['title']] = $feature + ['feature' => [$package['name']]];
-                
+
                 if (isset($featureList[$feature['title']]['is_value_fixed'])) {
                     $mainFeature[$feature['title']] = $featureList[$feature['title']];
                 } else {
                     $subFeature[$feature['title']] = $featureList[$feature['title']];
                 }
             }
-        }     
-        
+        }
+
         $featureList = $mainFeature + $subFeature;
 
         $subscription = PackageSubscription::where('user_id', auth()->user()->id ?? 0)->first();
 
         return ['packages' => $allPackages, 'features' => $featureList, 'subscription' => $subscription];
     }
-    
+
     /**
      * Available Billing Cycle 
      */
@@ -744,9 +758,9 @@ class SubscriptionController extends Controller
             'weekly' => __('Weekly'),
             'days' => __('Days'),
         ];
-        
+
         $cycles = [];
-        
+
         foreach ($packages as $key => $package) {
             foreach ($package['billing_cycle'] as $billingKey => $value) {
                 if ($value == 1) {
@@ -754,12 +768,12 @@ class SubscriptionController extends Controller
                 }
             }
         }
-        
+
         // Sort the $cycles array based on the order of $cycle array
         uksort($cycles, function ($a, $b) use ($cycleList) {
             return array_search($a, array_keys($cycleList)) - array_search($b, array_keys($cycleList));
         });
-        
+
         return $cycles;
     }
 }

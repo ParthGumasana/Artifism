@@ -16,7 +16,7 @@ class AiPreferenceRequest extends FormRequest
     {
         return [
             'short_desc_length' => ['required', 'integer', 'regex:/^(?:[1-9]|[1-9][0-9]{1,2}|1000)$/'],
-            'long_desc_length' => ['required', 'integer', 'regex:/^(?:[1-9]|[1-9][0-9]{1,2}|1000)$/'],
+            'long_desc_length' => ['required', 'integer', 'regex:/^(?:[1-9]|[1-9][0-9]{1,3}|[1-3][0-9]{3}|4[0-4][0-9]{2}|4500)$/'],
         ];
     }
 

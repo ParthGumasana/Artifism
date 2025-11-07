@@ -7,7 +7,7 @@
  * @created 18-02-2023
  */
 
- namespace Modules\Subscription\Services;
+namespace Modules\Subscription\Services;
 
 use App\Models\{
     Currency,
@@ -20,13 +20,16 @@ use Modules\Gateway\Contracts\RecurringCancelInterface;
 use Modules\Gateway\Facades\GatewayHandler;
 use Modules\OpenAI\Entities\ChatBot;
 use Modules\Subscription\Entities\{
-    Package, PackageMeta, PackageSubscription, PackageSubscriptionMeta,
+    Package,
+    PackageMeta,
+    PackageSubscription,
+    PackageSubscriptionMeta,
     SubscriptionDetails
 };
 use Modules\Subscription\Traits\SubscriptionTrait;
 
- class PackageSubscriptionService
- {
+class PackageSubscriptionService
+{
     use SubscriptionTrait;
 
     /**
@@ -134,10 +137,10 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         }
 
         if ($subscription = PackageSubscription::updateOrCreate([
-                'user_id' => $userId
-            ], $data)) {
-                $this->storeMeta($subscription->id, $subscription->package_id, $data['meta']);
-                return $this->saveSuccessResponse() + ['subscription' => $subscription];
+            'user_id' => $userId
+        ], $data)) {
+            $this->storeMeta($subscription->id, $subscription->package_id, $data['meta']);
+            return $this->saveSuccessResponse() + ['subscription' => $subscription];
         }
 
         return $this->saveFailResponse();
@@ -156,23 +159,24 @@ use Modules\Subscription\Traits\SubscriptionTrait;
                 $gateway = strtolower($history?->payment_method);
                 $subscriptionId = $subscription->{str_replace('recurring', '', $gateway) . '_subscription_id'};
                 $customerId = User::find($userId)->{str_replace('recurring', '', $gateway) . '_customer_id'};
-    
+
                 $response['status'] = 'failed';
                 if (str_contains($gateway, 'recurring')) {
                     $response = $this->cancelRecurring($gateway, $subscriptionId, $customerId);
                 }
-    
+
                 if (!str_contains($gateway, 'recurring') || $response['status'] == 'success') {
                     $this->getUserSubscription($userId)?->update(['status' => 'Cancel', 'renewable' => 0]);
-    
+
+                    PackageSubscriptionMeta::where('package_subscription_id', $subscription->id)->where('type', 'like', 'feature_%')->where('key', 'value')->update(['value' => 0]);
                     User::find($userId)->subscriptionDescription()?->update(['status' => 'Cancel', 'renewable' => 0]);
-    
+
                     return [
                         'status' => 'success',
                         'message' => __('The :x has been successfully canceled.', ['x' => $this->service])
                     ];
                 }
-    
+
                 return [
                     'status' => 'fail',
                     'message' => __(':x cancel failed. Please try again.', ['x' => $this->service])
@@ -189,7 +193,6 @@ use Modules\Subscription\Traits\SubscriptionTrait;
             'status' => 'fail',
             'message' => __('Subscription not found.')
         ];
-        
     }
 
     /**
@@ -246,15 +249,16 @@ use Modules\Subscription\Traits\SubscriptionTrait;
             $limit = $feature->where('key', 'value')->first()->value;
             $history = SubscriptionDetails::where('package_subscription_id', $subscription->id)->whereIn('status', ['Active', 'Cancel'])->orderBy('id', 'desc')->first();
 
-            if ($history && $limit != - 1) {
+            if ($history && $limit != -1) {
                 $limit += json_decode($history->features)->{$value};
             }
 
             PackageSubscriptionMeta::where([
                 'package_subscription_id' => $subscription->id,
                 'type' => 'feature_' . $value,
-                'key' => 'value'])
-            ->update(['value' => $limit]);
+                'key' => 'value'
+            ])
+                ->update(['value' => $limit]);
         }
 
         $nonFeature = [
@@ -265,8 +269,9 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         foreach ($nonFeature as $key => $value) {
             PackageSubscriptionMeta::where([
                 'package_subscription_id' => $subscription->id,
-                'key' => $key])
-            ->update(['value' => $value]);
+                'key' => $key
+            ])
+                ->update(['value' => $value]);
         }
 
         PackageSubscription::forgetCache('subscriptionResource.' . 'package_subscriptions' . $subscription->id);
@@ -329,18 +334,18 @@ use Modules\Subscription\Traits\SubscriptionTrait;
             return $this->notFoundResponse();
         }
 
-       if (isset($data['activation_date']) || isset($data['billing_date']) || isset($data['next_billing_date'])) {
+        if (isset($data['activation_date']) || isset($data['billing_date']) || isset($data['next_billing_date'])) {
             $data = $this->validateData($data);
-       }
+        }
 
         if ($subscription->update($data)) {
             $this->updateMeta($data['meta'], $id);
-            
+
             if ($data['payment_status'] == 'Paid') {
                 $detailId = $subscription->details()->latest()->first()->id;
                 CouponService::updateCouponRedeemStatus($detailId);
             }
-            
+
             PackageSubscription::forgetCache('subscriptionResource.' . 'package_subscriptions' . $id);
 
             return $this->saveSuccessResponse();
@@ -535,7 +540,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      */
     public function getUserSubscription(int|null $userId = null, bool $newInstance = false): object|null
     {
-        $userId = $this->checkUserId($userId); 
+        $userId = $this->checkUserId($userId);
         return $this->getSubscription($userId, 'user_id', $newInstance);
     }
 
@@ -572,7 +577,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
 
         foreach ($this->getFeatureList() as $value) {
             $feature = $this->getFeatureOption($subscriptionId, $value);
-            
+
             if (!$feature) {
                 continue;
             }
@@ -582,7 +587,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
 
                 continue;
             }
-            
+
             if (count(explode('x', $feature['value'])) == 2) {
                 $data[$value] = $feature['value'];
                 continue;
@@ -640,7 +645,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         return $data;
     }
 
-     /**
+    /**
      * Get Default Feature
      *
      * @return array
@@ -680,7 +685,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
                 "limit" => "0",
                 "used" => "0",
                 "remain" => "0",
-                "percentage"=> "0"
+                "percentage" => "0"
             ],
             "chatbot" => [
                 "limit" => "0",
@@ -759,7 +764,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         $data = [];
         foreach ($this->getFeatureList() as $value) {
             $feature = $this->getFeatureOption($subscriptionId, $value);
-            
+
             if (!$feature) {
                 continue;
             }
@@ -813,24 +818,24 @@ use Modules\Subscription\Traits\SubscriptionTrait;
     private function featureUsageMeta(int $subscriptionId, string $feature): object|null
     {
         return PackageSubscriptionMeta::where([
-                'package_subscription_id' => $subscriptionId,
-                'type' => 'feature_'. $feature,
-                'key' => 'usage'
-            ])->first();
+            'package_subscription_id' => $subscriptionId,
+            'type' => 'feature_' . $feature,
+            'key' => 'usage'
+        ])->first();
     }
-    
+
     /**
      * Subscription Usage Increment
      */
     public function subscriptionUsageIncrement(int $subscriptionId, string $feature, float $value): bool
     {
         $usage = $this->featureUsageMeta($subscriptionId, $feature);
-        
+
         app()->instance('user_balance_reduce', 'subscription');
 
         return $usage && $usage->increment('value', $value);
     }
-    
+
     /**
      * Onetime Balance Increment
      */
@@ -838,14 +843,14 @@ use Modules\Subscription\Traits\SubscriptionTrait;
     {
         $balanceUsed = auth()->user()->getMeta($feature . '_used');
         $balanceLimit = auth()->user()->getMeta($feature . '_limit');
-        
+
         if ($balanceLimit < $balanceUsed && $balanceLimit != -1) {
             $balanceUsed = $balanceLimit;
         }
-        
+
         auth()->user()->setMeta($feature . '_used', $balanceUsed + $value);
         auth()->user()->save();
-        
+
         app()->instance('user_balance_reduce', 'onetime');
         return true;
     }
@@ -858,7 +863,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         if (!$subscriptionId) {
             return $this->onetimeBalanceIncrement($feature, $value);
         }
-        
+
         if (preference('credit_balance_priority', 'subscription') == 'onetime') {
             if (auth()->user()->hasCredit($feature)) {
                 return $this->onetimeBalanceIncrement($feature, $value);
@@ -866,11 +871,11 @@ use Modules\Subscription\Traits\SubscriptionTrait;
                 return $this->subscriptionUsageIncrement($subscriptionId, $feature, $value);
             }
         }
-        
+
         if ($this->isValidSubscription($userId ? $userId : auth()->user()->id, $feature)['status'] == 'success') {
             return $this->subscriptionUsageIncrement($subscriptionId, $feature, $value);
         }
-        
+
         return $this->onetimeBalanceIncrement($feature, $value);
     }
 
@@ -958,7 +963,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
     public function isExpired(int|null $userId = null): bool
     {
         $subscription = $this->getUserSubscription($userId);
-        
+
         if ($subscription->billing_cycle == 'lifetime' && !$this->isTrialMode($subscription->id)) {
             return false;
         }
@@ -1012,14 +1017,14 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         if (preference('credit_balance_priority', 'subscription') == 'onetime' && auth()->user()->hasCredit('image')) {
             return true;
         }
-        
+
         $subscription = $this->getUserSubscription($userId);
 
         if (!$subscription) {
             if (auth()->user()->hasCredit('image')) {
                 return true;
             }
-            
+
             return false;
         }
 
@@ -1032,16 +1037,15 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         if ($feature['value'] == -1) {
             return true;
         }
-        
+
         $resolution = explode('x', $resolution);
         $feature = explode('x', $feature['value']);
-        
+
         if (isset($resolution[0]) && isset($resolution[1]) && isset($feature[0]) && isset($feature[1])) {
             return ($resolution[0] * $resolution[1]) <= ($feature[0] * $feature[1]);
         }
-        
+
         return false;
-        
     }
 
     /**
@@ -1100,17 +1104,17 @@ use Modules\Subscription\Traits\SubscriptionTrait;
                 'message' => __('The feature is not available in your plan.')
             ];
         }
-        
+
         if (!is_null($botId)) {
             $bot = ChatBot::find($botId);
-            
+
             if (!$bot || !in_array($bot->code, json_decode($subscription->chatAssistants) ?? [])) {
                 return [
                     'status' => $status,
                     'message' => __('The bot is not available in your plan.')
                 ];
-            } 
-        } 
+            }
+        }
 
         return [
             'status' => 'success',
@@ -1125,7 +1129,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      * @param string $invoiceName
      * @return bool|void
      */
-    public function invoicePdfEmail($subscription , $invoiceName = 'subscription-invoice.pdf')
+    public function invoicePdfEmail($subscription, $invoiceName = 'subscription-invoice.pdf')
     {
         if (empty($subscription)) {
             return false;
@@ -1134,7 +1138,6 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         $data['logo'] = Preference::where('field', 'company_logo_light')->first()->fileUrl();
 
         return printPDF($data, public_path() . '/uploads/invoices/' . $invoiceName, 'subscription::invoice_print', view('subscription::invoice_print', $data), null, "email");
-
     }
 
     /**
@@ -1216,7 +1219,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      * @param string|null $paymentMethod
      * @return object
      */
-    public function storeSubscriptionDetails(int|null $userId = null, string|null $paymentMethod = null, $uniqCode = null) : object
+    public function storeSubscriptionDetails(int|null $userId = null, string|null $paymentMethod = null, $uniqCode = null): object
     {
         $packageSubscription = $this->getUserSubscription($userId, true);
 
@@ -1237,7 +1240,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      * @param integer|null $userId
      * @return bool
      */
-    public function updateSubscriptionDetails(int|null $userId = null) : bool
+    public function updateSubscriptionDetails(int|null $userId = null): bool
     {
         $packageSubscription = $this->getUserSubscription($userId, true);
 
@@ -1327,7 +1330,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         }
 
         $subscription->update($updateData);
-        
+
         if ($subscription->status == 'Active') {
             // Update subscription meta
             foreach ($this->getFeatureList() as $value) {
@@ -1338,21 +1341,22 @@ use Modules\Subscription\Traits\SubscriptionTrait;
                 }
 
                 $limit = $feature->where('key', 'value')->first()->value;
-                
+
                 $history = SubscriptionDetails::where('package_subscription_id', $subscription->id)->whereIn('status', ['Active', 'Cancel'])->orderBy('id', 'desc')->first();
 
-                if ($history && $limit != - 1) {
+                if ($history && $limit != -1) {
                     $limit += json_decode($history->features)->{$value} ?? 0;
                 }
-                
+
                 PackageSubscriptionMeta::where([
                     'package_subscription_id' => $subscription->id,
                     'type' => 'feature_' . $value,
-                    'key' => 'value'])
-                ->update(['value' => $limit]);
+                    'key' => 'value'
+                ])
+                    ->update(['value' => $limit]);
             }
         }
-        
+
         return true;
     }
 
@@ -1392,7 +1396,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
 
         $receiveAmount = $request->resource['amount']['total'];
         $data = $this->prepareRenewData($packageSubscription, $receiveAmount);
-        
+
         //paypal
         if (isActive('Affiliate')) {
             $subscriptionDetails = SubscriptionDetails::where('user_id', $packageSubscription->user_id)->orderBy('id', 'desc')->first();
@@ -1418,7 +1422,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
     public function isAdminSubscribed($userId = null)
     {
         $user = $userId ? $this->checkUser($userId) : auth()->user();
-        
+
         if (preference('credit_balance_priority', 'subscription') == 'onetime') {
             return $user->role()->type == 'admin' && !boolval($this->getUserSubscription($user->id) && is_null($user->getMeta('word_limit')));
         }
@@ -1446,7 +1450,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      * @param null|string $paymentMethod
      * @return boolean
      */
-    public function isRecurringSubscriptionDetailUpdate(string|int $subscriptionId, int|float|string $amount_received, string|null $paymentMethod = null) : bool
+    public function isRecurringSubscriptionDetailUpdate(string|int $subscriptionId, int|float|string $amount_received, string|null $paymentMethod = null): bool
     {
         $subscriptionDetails = SubscriptionDetails::where(['payment_status' => 'Unpaid', 'billing_date' => date('Y-m-d'), 'code' => $subscriptionId])->latest()->first();
 
@@ -1470,7 +1474,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      * @param integer|float|string $receiveAmount
      * @return array
      */
-    public function prepareRenewData(array|object $subscription, int|float|string $receiveAmount) : array
+    public function prepareRenewData(array|object $subscription, int|float|string $receiveAmount): array
     {
         $days = ['weekly' => 7, 'monthly' => 30, 'yearly' => 365, 'days' => $subscription->duration];
         return [
@@ -1509,24 +1513,24 @@ use Modules\Subscription\Traits\SubscriptionTrait;
             ];
         }
     }
-    
+
     /**
      * Payment Type
      */
     public function paymentType(string|null $billingCycle, int|null $planId): string
     {
         $paymentType = ['automate' => 'recurring', 'manual' => 'single', 'customer_choice' => 'all'];
-        
+
         if (\is_null($billingCycle) || is_null($planId)) {
             return $paymentType[preference('subscription_renewal')];
         }
-        
+
         $renewal = $billingCycle == 'lifetime' ? 'manual' : preference('subscription_renewal');
-        
+
         if (!preference('subscription_coupon_recurring') && (int) (new CouponService)->getDiscountAmount($planId, auth()->user()->id, $billingCycle) > 0) {
             $renewal = 'manual';
         }
-        
+
         return $paymentType[$renewal];
     }
 
@@ -1537,7 +1541,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
     {
         return Package::select('id', 'name')->active()->pluck("name", "id")->toArray();
     }
-    
+
     /* Paypal recurring renew
      *
      * @param object|array $request
@@ -1552,7 +1556,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
         $userId = $request->object['metadata']['user_id'];
         $packageSubscription = $this->getUserSubscription($userId);
 
-        if (empty($packageSubscription) ||$packageSubscription->status == 'Active') {
+        if (empty($packageSubscription) || $packageSubscription->status == 'Active') {
             return false;
         }
 
@@ -1576,7 +1580,7 @@ use Modules\Subscription\Traits\SubscriptionTrait;
      * 
      * @return string
      */
-    public function generateUniqueCode() 
+    public function generateUniqueCode()
     {
         $code = generateUniqueId();
 
@@ -1586,5 +1590,4 @@ use Modules\Subscription\Traits\SubscriptionTrait;
 
         return $code;
     }
- }
-
+}
