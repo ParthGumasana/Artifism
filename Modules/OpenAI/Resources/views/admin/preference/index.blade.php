@@ -109,8 +109,8 @@
                                                     <div class="col-sm-8">
                                                         <input type="text"
                                                             value="{{ $openai['long_desc_length'] ?? '' }}"
-                                                            class="form-control inputFieldDesign positive-int-number" name="long_desc_length" required  pattern="^(?:[1-9]|[1-9][0-9]{1,2}|1000)$"
-                                                            oninvalid="this.setCustomValidity('{{ __('This field is required.') }}')" data-pattern="{{ __('Value exceeds the maximum limit of 1000.') }}">
+                                                            class="form-control inputFieldDesign positive-int-number" name="long_desc_length" required  pattern="^(?:[1-9]|[1-9][0-9]{1,2}|2500)$"
+                                                            oninvalid="this.setCustomValidity('{{ __('This field is required.') }}')" data-pattern="{{ __('Value exceeds the maximum limit of 2500.') }}">
                                                     </div>
                                                 </div>
                                                 <div class="form-group row">
