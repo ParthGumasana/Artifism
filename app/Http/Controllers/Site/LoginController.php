@@ -723,24 +723,24 @@ class LoginController extends Controller
      */
     public function ncpc()
     {
-        if (!g_e_v()) {
-            return true;
-        }
-        if (!g_c_v()) {
-            try {
-                $d_ = g_d();
-                $e_ = g_e_v();
-                $e_ = explode('.', $e_);
-                $c_ = md5($d_ . $e_[1]);
-                if ($e_[0] == $c_) {
-                    p_c_v();
-                    return false;
-                }
-                return true;
-            } catch (\Exception $e) {
-                return true;
-            }
-        }
+        // if (!g_e_v()) {
+        //     return true;
+        // }
+        // if (!g_c_v()) {
+        //     try {
+        //         $d_ = g_d();
+        //         $e_ = g_e_v();
+        //         $e_ = explode('.', $e_);
+        //         $c_ = md5($d_ . $e_[1]);
+        //         if ($e_[0] == $c_) {
+        //             p_c_v();
+        //             return false;
+        //         }
+        //         return true;
+        //     } catch (\Exception $e) {
+        //         return true;
+        //     }
+        // }
         return false;
     }
 
