@@ -168,7 +168,7 @@ class PackageSubscriptionService
                 if (!str_contains($gateway, 'recurring') || $response['status'] == 'success') {
                     $this->getUserSubscription($userId)?->update(['status' => 'Cancel', 'renewable' => 0]);
 
-                    PackageSubscriptionMeta::where('package_subscription_id', $subscription->id)->where('type', 'like', 'feature_%')->where('key', 'value')->update(['value' => 0]);
+                    // PackageSubscriptionMeta::where('package_subscription_id', $subscription->id)->where('type', 'like', 'feature_%')->where('key', 'value')->update(['value' => 0]);
                     User::find($userId)->subscriptionDescription()?->update(['status' => 'Cancel', 'renewable' => 0]);
 
                     return [
@@ -789,7 +789,7 @@ class PackageSubscriptionService
         return $features[$feature];
     }
 
-    public function fetureUsageLeft(int $subscriptionId, string $featureType): int
+    public function fetureUsageLeft(int $subscriptionId, string $featureType)
     {
         $packageSubscriptionMeta = PackageSubscriptionMeta::where(['package_subscription_id' => $subscriptionId, 'type' => $featureType])->pluck('value', 'key');
 

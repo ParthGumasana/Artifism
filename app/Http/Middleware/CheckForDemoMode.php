@@ -35,25 +35,25 @@ class CheckForDemoMode
     public function handle($request, Closure $next)
     {
         // If the application is in demo mode, we will redirect the user to back
-        if ($this->app->config->get('openAI.is_demo')) {
+        // if ($this->app->config->get('openAI.is_demo')) {
 
-            if ($request->is('api/v2/*') || $request->wantsJson()) {
-                return response()->json([
-                    'error' => __("Demo Mode! This action can't be perform."),
-                ], 422);
-            }
+        //     if ($request->is('api/v2/*') || $request->wantsJson()) {
+        //         return response()->json([
+        //             'error' => __("Demo Mode! This action can't be perform."),
+        //         ], 422);
+        //     }
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'status' => 'info',
-                    'message' => __("Demo Mode! This action can't be perform."),
-                ]);
-            }
+        //     if ($request->ajax() || $request->wantsJson()) {
+        //         return response()->json([
+        //             'status' => 'info',
+        //             'message' => __("Demo Mode! This action can't be perform."),
+        //         ]);
+        //     }
 
-            return redirect()->back()->with([
-                'info' => __("Demo Mode! This action can't be perform."),
-            ]);
-        }
+        //     return redirect()->back()->with([
+        //         'info' => __("Demo Mode! This action can't be perform."),
+        //     ]);
+        // }
 
         // Otherwise, we will continue with the request
         return $next($request);

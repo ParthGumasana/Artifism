@@ -42,8 +42,8 @@ return [
     /* Demo account credentails, Only work when the application on demo mode */
     'credentials' => [
         'admin' => [
-            'email' => 'admin@techvill.net',
-            'password' => '123456'
+            'email' => 'admin@gmail.com',
+            'password' => 'Admin@123'
         ],
         'customer' => [
             'email' => 'user@techvill.net',
