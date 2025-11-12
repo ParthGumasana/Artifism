@@ -19,9 +19,9 @@ class VoiceoverController extends Controller
      * @param VoiceoverService $voiceoverService
      */
 
-     public function __construct(
+    public function __construct(
         protected VoiceoverService $voiceoverService
-        ) {}
+    ) {}
 
     /**
      * List of all contents
@@ -30,11 +30,11 @@ class VoiceoverController extends Controller
      * @return [type]
      */
 
-     public function index(Request $request)
-     {
+    public function index(Request $request)
+    {
         $contents = (new Archive)->voiceovers('voiceover')->filter()->paginate(preference('row_per_page'));
         return VoiceoverDetailsResource::collection($contents)->response()->getData(true);
-     }
+    }
 
     /**
      * Audio generate from prompt
@@ -51,6 +51,12 @@ class VoiceoverController extends Controller
         }
 
         request()->merge([...$request['data']]);
+        $map = config('models.mapping.voice-over');
+        $data = $request->get('data', []);
+        if (isset($data['model']) && isset($map[$data['model']])) {
+            $data['model'] = $map[$data['model']];
+        }
+        $request->merge(['data' => $data]);
         try {
             $this->voiceoverService->validation();
             $response = $this->voiceoverService->handleSpeechGenerate($request->except('_token'));
@@ -60,7 +66,7 @@ class VoiceoverController extends Controller
         }
     }
 
-     /**
+    /**
      * Show the specified resource.
      *
      * @param  int  $id
@@ -89,9 +95,9 @@ class VoiceoverController extends Controller
             return response()->json(['error' => __('Invalid Request.')], Response::HTTP_FORBIDDEN);
         }
 
-        return $this->voiceoverService->delete($id) 
-        ? response()->json(['message' => __('The :x has been successfully deleted.', ['x' => __('Voiceover')])], Response::HTTP_OK)
-        : response()->json(['error' => __('No :x found.', ['x' => __('Voiceover')])], Response::HTTP_NOT_FOUND);
+        return $this->voiceoverService->delete($id)
+            ? response()->json(['message' => __('The :x has been successfully deleted.', ['x' => __('Voiceover')])], Response::HTTP_OK)
+            : response()->json(['error' => __('No :x found.', ['x' => __('Voiceover')])], Response::HTTP_NOT_FOUND);
     }
 
     /**

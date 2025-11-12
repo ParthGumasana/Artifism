@@ -56,6 +56,11 @@ class AiChatController extends Controller
      */
     public function store(AiChatRequest $request): JsonResponse
     {
+        $map = config('models.mapping.ai-chat');
+        $model = $request->model;
+        if (isset($model) && isset($map[$model])) {
+            $request['options']['model'] = $map[$model];
+        }
         try {
             $chat = (new AiChatService())->store($request->except('_token'));
             return response()->json(['data' => $chat], Response::HTTP_CREATED);

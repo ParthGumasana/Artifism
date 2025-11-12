@@ -119,12 +119,12 @@ class LongArticleController extends Controller
     public function edit(int $longArticleId): View
     {
         session()->forget(['longarticle']);
-        
+
         $data['longArticleId'] = $longArticleId;
         $data['resetFlag'] = true;
         $data['longArticle'] = Archive::where(['id' => $longArticleId, 'type' => 'long_article'])->firstOrFail();
-   
-        return view('openai::blades.long_article.edit', $data); 
+
+        return view('openai::blades.long_article.edit', $data);
     }
 
     /**
@@ -149,7 +149,7 @@ class LongArticleController extends Controller
             return response()->json($response);
         } catch (Exception $e) {
             return response()->json([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => $e->getMessage()
             ]);
         }
@@ -159,7 +159,7 @@ class LongArticleController extends Controller
     public function generateTitles(LongArticleTitleRequest $request): array|JsonResponse
     {
         session(['longarticle' => [
-            'provider' => $request->provider, 
+            'provider' => $request->provider,
             'title_number' => $request->number_of_title,
             'options' => request(request('provider'))
         ]]);
@@ -167,24 +167,28 @@ class LongArticleController extends Controller
         request()->merge(data_get($request, request('provider'), []));
         $request = $request->validated() + ['long_article_id' => $request->long_article_id];
         $request['options'] = request(request('provider'));
-
+        $map = config('models.mapping.long-article');
+        $model = $request['options']['model'];
+        if (isset($model) && isset($map[$model])) {
+            $request['options']['model'] = $map[$model];
+        }
         try {
-            
+
             $data = $this->longArticleService->handleTitleGenerate($request);
 
             return [
                 'status' => 'success',
-                'success' => true, 
-                'message' => __(':x new :y generated successfully.', ['x' => $data['num_of_title'], 'y' => Str::plural(__('title'), $data['num_of_title'])]), 
+                'success' => true,
+                'message' => __(':x new :y generated successfully.', ['x' => $data['num_of_title'], 'y' => Str::plural(__('title'), $data['num_of_title'])]),
                 'long_article_id' => $data['longArticleId'],
                 'titles' => $data['generatedTitles'],
                 'word_used' => $data['wordUsed'],
                 'credit_balance' =>  $this->displayCreditBalance() ? view('openai::blades.long_article.credit_balance', [
                     'wordLeft' => $data['wordLeft'],
                     'wordLimit' => $data['wordLimit']
-                    ])->render() : "",
+                ])->render() : "",
                 'output' => view('openai::blades.long_article.step_data.title', [
-                        'heading' => '<div class="pb-2">
+                    'heading' => '<div class="pb-2">
                                             <p class="text-color-14 dark:text-white text-18 leading-5 font-semibold font-Figtree wrap-anywhere">
                                                 '.  __("Title Generation")  .'
                                             </p>
@@ -193,7 +197,7 @@ class LongArticleController extends Controller
                                             </p>
                                         </div>',
                         'titles'=> $data['generatedTitles']
-                    ])->render()
+                ])->render()
             ];
             
         } catch (Exception $e) {
@@ -246,14 +250,18 @@ class LongArticleController extends Controller
         );
         request()->merge(data_get(session('longarticle'), 'options', []));
         $request = $request->validated() + ['long_article_id' => $request->long_article_id] + (session('longarticle') ?? []);
-
+        $map = config('models.mapping.long-article');
+        $model = $request['options']['model'];
+        if (isset($model) && isset($map[$model])) {
+            $request['options']['model'] = $map[$model];
+        }
         try {
             $data = $this->longArticleService->handleOutlineGenerate($request);
 
             return [
                 'status' => 'success',
                 'success' => true,
-                'message' => __(':x new :y generated successfully.', ['x' =>  $data['num_of_outline'], 'y' => Str::plural(__('outline'), $data['num_of_outline'])]), 
+                'message' => __(':x new :y generated successfully.', ['x' =>  $data['num_of_outline'], 'y' => Str::plural(__('outline'), $data['num_of_outline'])]),
                 'long_article_id' => $data['longArticleId'],
                 'outlines' => $data['generatedOutlines'],
                 'word_used' => $data['wordUsed'],
@@ -281,7 +289,7 @@ class LongArticleController extends Controller
             ]);
         }
     }
-    
+
     /**
      * Display outline data and return HTML for rendering.
      *
@@ -325,7 +333,7 @@ class LongArticleController extends Controller
                 'response' => __('Article not found. Please reset and try again.'),
             ];
         }
-        
+
         $longArticle->title = $request->title;
         $longArticle->article_title = $request->title;
         $longArticle->save();
@@ -343,15 +351,15 @@ class LongArticleController extends Controller
         $article->save();
 
         session(['longarticle' => array_merge(session('longarticle', []), $request->except('_token'))]);
- 
+
         return [
             'status' => 200,
             'success' => true,
             'message' => '',
-            'longArticleBlogId' => $longArticle->id, 
-            'unique_identifier' => $longArticle->unique_identifier, 
+            'longArticleBlogId' => $longArticle->id,
+            'unique_identifier' => $longArticle->unique_identifier,
             'blog' => view('openai::blades.long_article.step_data.article', ['articleData'=> $longArticle])->render()
-        ];  
+        ];
     }
 
     public function generateArticle()

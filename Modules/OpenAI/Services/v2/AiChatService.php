@@ -33,7 +33,7 @@ class AiChatService
 
         if (!is_null(request('provider'))) {
             $this->aiProvider = AiProviderManager::isActive(request('provider'), 'aichat');
-            manageProviderValues(request('provider'), 'model', 'aichat');
+            manageProviderValues(request('provider'), request()->model, 'aichat');
         }
     }
 

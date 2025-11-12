@@ -34,11 +34,7 @@ class VoiceoverDataProcessor
                 'type' => 'dropdown',
                 'label' => 'Models',
                 'name' => 'model',
-                'value' => [
-                    'TTS',
-                    'TTS HD',
-                    'GPT-4o Mini TTS'
-                ],
+                'value' => config('models.available.voice-over'),
                 'visibility' => true,
                 'required' => true
             ],

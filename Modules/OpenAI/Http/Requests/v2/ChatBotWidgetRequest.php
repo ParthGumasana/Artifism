@@ -8,6 +8,14 @@ use Illuminate\Validation\Rule;
 
 class ChatBotWidgetRequest extends FormRequest
 {
+    protected function prepareForValidation()
+    {
+        $map = config('models.mapping.chatbot');
+        $this->merge([
+            'model' => $map[$this->input('model')] ?? $this->input('model'),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

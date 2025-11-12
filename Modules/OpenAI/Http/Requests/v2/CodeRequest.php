@@ -17,6 +17,17 @@ class CodeRequest extends FormRequest
     }
 
     /**
+     * Modify incoming data before validation map with config file.
+     */
+    protected function prepareForValidation()
+    {
+        $map = config('models.mapping.code');
+        $this->merge([
+            'model' => $map[$this->input('model')] ?? $this->input('model'),
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array

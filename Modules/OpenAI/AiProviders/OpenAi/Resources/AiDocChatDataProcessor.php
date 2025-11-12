@@ -43,25 +43,7 @@ class AiDocChatDataProcessor
                 'type' => 'dropdown',
                 'label' => 'Models',
                 'name' => 'model',
-                'value' => [
-                    'gpt-5',
-                    'gpt-5-mini',
-                    'gpt-5-nano',
-                    'gpt-5-chat-latest',
-                    'gpt-4o-mini',
-                    'gpt-4o',
-                    'gpt-4',
-                    'gpt-3.5-turbo',
-                    'o1-preview',
-                    'o1-mini',
-                    'o1',
-                    'o3-mini',
-                    'gpt-4.5-preview',
-                    'o4-mini',
-                    'gpt-4.1',
-                    'gpt-4.1-mini',
-                    'gpt-4.1-nano'
-                ],
+                'value' => config('models.available.ai-doc-chat'),
                 'required' => true
             ],
             [

@@ -120,6 +120,13 @@ class TemplateController extends Controller
     public function process()
     {
         try {
+            
+            $map = config('models.mapping.template-data');
+            $model = request()->model;
+            if (isset($model) && isset($map[$model])) {
+                request()->merge(['model' => $map[$model]]);
+            }
+
             $this->templateService->initiate(request()->all());
             $this->templateService->templateData();
             return $this->templateService->processData();

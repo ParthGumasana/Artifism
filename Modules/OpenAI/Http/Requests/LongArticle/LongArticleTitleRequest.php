@@ -12,6 +12,19 @@ use App\Traits\ApiResponse;
 class LongArticleTitleRequest extends FormRequest
 {
     use ApiResponse;
+
+    protected function prepareForValidation()
+    {
+        $map = config('models.mapping.long-article');
+        $openai = $this->input('openai', []);
+        if (isset($openai['model']) && isset($map[$openai['model']])) {
+            $openai['model'] = $map[$openai['model']];
+        }
+        $this->merge([
+            'openai' => $openai,
+        ]);
+    }
+    
     /**
      * Get the validation rules that apply to the request.
      *
@@ -52,4 +65,3 @@ class LongArticleTitleRequest extends FormRequest
         ]));
     }
 }
-        

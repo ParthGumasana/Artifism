@@ -82,11 +82,7 @@ class ImageDataProcessor
                 "type" => "dropdown",
                 "label" => "Models",
                 "name" => "model",
-                "value" => [
-                    "dall-e-2",
-                    "dall-e-3",
-                    "gpt-image-1"
-                ],
+                "value" => config('models.available.image'),
                 "default_value" => "dall-e-2",
                 "visibility" => true,
                 "required" => true,
@@ -206,12 +202,12 @@ class ImageDataProcessor
                     ],
                     [
                         "label" => "Comic Book",
-                        "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\comic.png", 
+                        "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\comic.png",
                     ],
                     [
                         "label" => "Digital Art",
                         "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\digital-art.png",
-                    ],  
+                    ],
                     [
                         "label" => "Enhance",
                         "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\enhance.png",
@@ -254,8 +250,8 @@ class ImageDataProcessor
                     ],
                     [
                         "label" => "Tile Texture",
-                        "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\tile-texture.jpg",  
-                    ],  
+                        "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\tile-texture.jpg",
+                    ],
                     [
                         "label" => "Water Color",
                         "url" => "Modules\\OpenAI\\Resources\\assets\\image\\art-style\\water-color.png",

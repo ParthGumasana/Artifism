@@ -58,7 +58,7 @@ class LongArticleService
     public function handleTitleGenerate(array $requestData): array
     {
         if(! is_null($requestData['provider'])) {
-            manageProviderValues($requestData['provider'], 'model', 'longarticle');
+            manageProviderValues($requestData['provider'], $requestData['options']['model'], 'longarticle');
         }
 
         // Checking Credit Balance
@@ -386,7 +386,12 @@ class LongArticleService
         $longArticle = Archive::whereType('long_article')->whereId(session('longarticle')['long_article_id'])->first();
         $aiProvider = AiProviderManager::isActive(session('longarticle')['provider'], 'longarticle');
         request()->merge(data_get(session('longarticle'), 'options', []));
-        manageProviderValues(session('longarticle')['provider'], 'model', 'longarticle');
+        $map = config('models.mapping.long-article');
+        $model = request()->model;
+        if (isset($model) && isset($map[$model])) {
+            request()->merge(['model' => $map[$model]]);
+        }
+        manageProviderValues(session('longarticle')['provider'], request()->model, 'longarticle');
 
         if ($this->production) {
             $subscription = null;
@@ -403,7 +408,12 @@ class LongArticleService
                     throw new Exception($validation['message']);
                 }
             }
-
+            $la = session('longarticle');
+            $model = data_get($la, 'options.model');
+            if (isset($map[$model])) {
+                $la['options']['model'] = $map[$model];
+                session(['longarticle' => $la]);
+            }
             return response()->stream(function () use ($aiProvider, $longArticle, $subscription, $userId) {   
                 
                 $text = ""; 

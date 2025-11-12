@@ -42,7 +42,7 @@ return [
     /* Demo account credentails, Only work when the application on demo mode */
     'credentials' => [
         'admin' => [
-            'email' => 'admin@gmail.com',
+            'email' => 'admin@admin.com',
             'password' => 'Admin@123'
         ],
         'customer' => [

@@ -17,6 +17,14 @@ class AiChatRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $map = config('models.mapping.ai-chat');
+        $this->merge([
+            'model' => $map[$this->input('model')] ?? $this->input('model'),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

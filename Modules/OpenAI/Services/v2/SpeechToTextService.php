@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package SpeechToTextService
  * @author TechVillage <support@techvill.org>
@@ -42,9 +43,9 @@ class SpeechToTextService
      *
      * @return void
      */
-    public function __construct() 
+    public function __construct()
     {
-        if(! is_null(request('provider'))) {
+        if (! is_null(request('provider'))) {
             $this->aiProvider = AiProviderManager::isActive(request('provider'), 'speechtotext');
         }
     }
@@ -69,14 +70,15 @@ class SpeechToTextService
         manageProviderValues(request('provider'), 'model', 'speechtotext');
 
         app('Modules\OpenAI\Http\Requests\SpeechStoreRequest')->safe();
-        
+
         try {
+            $map = config('models.mapping.speech-to-text');
+            $requestData['model'] = $map[$requestData['model']] ?? $requestData['model'];
             $result = $this->aiProvider->speechToText($requestData);
 
             if (! ($result instanceof SpeechResponseContract)) {
                 throw new Exception(__('Speech response must be an instance of SpeechResponseContract.'));
             }
-        
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -108,7 +110,6 @@ class SpeechToTextService
                 $this->createUserReply($chat->id);
 
                 $botReply = $this->createBotReply($chat->id, $result);
-
             } else {
                 $this->createUserReply(request('parent_id'));
                 $botReply = $this->createBotReply(request('parent_id'), $result);
@@ -121,7 +122,7 @@ class SpeechToTextService
         }
     }
 
-     /**
+    /**
      * Creates a new chat record.
      *
      * @return \Illuminate\Database\Eloquent\Model The newly created chat instance.
@@ -187,7 +188,7 @@ class SpeechToTextService
             'duration' => $result->duration,
             'balanceReduce' => ! subscription('isAdminSubscribed') || auth()->user()->hasCredit('minute') ? 'subscription' : 'onetime'
         ]);
-        
+
         handleSubscriptionAndCredit(subscription('getUserSubscription', auth()->id()), 'minute', $botReply->duration, auth()->id());
         return $botReply;
     }
@@ -198,9 +199,9 @@ class SpeechToTextService
      * @return string
      */
     protected function uploadPath(): string
-	{
-		return createDirectory(join(DIRECTORY_SEPARATOR, ['public', 'uploads','aiAudios']));
-	}
+    {
+        return createDirectory(join(DIRECTORY_SEPARATOR, ['public', 'uploads', 'aiAudios']));
+    }
 
     /**
      * Store an AI-generated audio file.
@@ -214,7 +215,7 @@ class SpeechToTextService
 
         $uploadedFile = $aiOptions;
         $fileName = md5(uniqid()) . "." . $uploadedFile->getClientOriginalExtension();
-        $destinationFolder = 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'aiAudios'. DIRECTORY_SEPARATOR . date('Ymd') . DIRECTORY_SEPARATOR;
+        $destinationFolder = 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'aiAudios' . DIRECTORY_SEPARATOR . date('Ymd') . DIRECTORY_SEPARATOR;
 
         if (!isExistFile($destinationFolder)) {
             createDirectory($destinationFolder);
@@ -289,7 +290,7 @@ class SpeechToTextService
     }
 
 
-     /**
+    /**
      * Retrieve a speech-to-text chat reply by its ID.
      *
      * @param int $id The ID of the speech record.
@@ -313,7 +314,7 @@ class SpeechToTextService
         \DB::beginTransaction();
         try {
             $speech = ArchiveService::delete($id, 'speech_to_text_chat_reply');
-            
+
             if ($speech) {
                 $this->unlinkFile($speech->file_name);
                 \DB::commit();
@@ -325,7 +326,6 @@ class SpeechToTextService
             } else {
                 \DB::rollBack();
             }
-
         } catch (\Exception $e) {
             \DB::rollBack();
             $response = ['status' => 'fail', 'message' => $e->getMessage()];
@@ -357,7 +357,7 @@ class SpeechToTextService
      */
     public static function audioPath($name)
     {
-        return 'public' . DIRECTORY_SEPARATOR . 'uploads'. DIRECTORY_SEPARATOR . 'aiAudios'. DIRECTORY_SEPARATOR . $name;
+        return 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'aiAudios' . DIRECTORY_SEPARATOR . $name;
     }
 
     /**
@@ -389,7 +389,7 @@ class SpeechToTextService
     public function speechUpdate(array $data): bool
     {
         $speech = ArchiveService::show($data['id'], 'speech_to_text_chat_reply');
-        
+
         if ($speech) {
             $speech->content = str_ireplace('<br>', "\n", $data['content']);
             return $speech->save();
@@ -436,6 +436,4 @@ class SpeechToTextService
             ->where('meta_creator.value', auth('api')->id())
             ->whereNull('user_id');
     }
- 
-
 }

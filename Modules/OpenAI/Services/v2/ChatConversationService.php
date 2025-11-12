@@ -82,8 +82,7 @@ class ChatConversationService
         if (! is_null(request('provider'))) {
             $this->aiProvider = AiProviderManager::isActive(request('provider'), 'chatbot');
             $this->aiProviderModel = request('model');
-            manageProviderValues(request('provider'), 'model', 'chatbot');
-            
+            manageProviderValues(request('provider'), $this->aiProviderModel, 'chatbot');
         }
 
         // For Embedding Response
@@ -105,7 +104,7 @@ class ChatConversationService
         $this->chatType = $type;
     }
 
-     /**
+    /**
      * Get the chat type.
      *
      * @return mixed The chat type.
@@ -115,7 +114,7 @@ class ChatConversationService
         return $this->chatType;
     }
 
-   /**
+    /**
      * Get the owner ID of a widget chat bot based on its ID.
      *
      * @param int $id The ID of the chat bot.
@@ -142,7 +141,7 @@ class ChatConversationService
     {
         return EmbededResource::with('metas');
     }
-        
+
     /**
      * Delete materials and their associated metadata by ID and type.
      *
@@ -165,7 +164,7 @@ class ChatConversationService
             if ($materials->isEmpty()) {
                 throw new Exception(__('No data found.'), Response::HTTP_NOT_FOUND);
             }
-            
+
             $this->deleteMeta($materials);
 
             $childs = Archive::with(['metas'])->where('parent_id', $id)->get();
@@ -205,7 +204,7 @@ class ChatConversationService
     public function getTextsFromIds(array $ids)
     {
         $texts = $this->model()->whereIn('id', $ids)->get()->toArray();
-    
+
         $textsById = [];
 
         foreach ($texts as $text) {
@@ -227,7 +226,7 @@ class ChatConversationService
 
         $userId = (new ContentService())->getCurrentMemberUserId('meta', null, ['user_id' => $this->userId]);
         handleSubscriptionAndCredit(subscription('getUserSubscription', $userId), 'word', $result->words(), $userId, ['owner_id' => $this->userId]);
-        
+
         return $this->storeInfo($result);
     }
 
@@ -291,7 +290,7 @@ class ChatConversationService
      */
     protected function chatType(): \Illuminate\Database\Eloquent\Collection
     {
-       return $this->model()->whereIn('id', request('file_id'))->get('type');
+        return $this->model()->whereIn('id', request('file_id'))->get('type');
     }
 
     /**
@@ -367,6 +366,9 @@ class ChatConversationService
 
         $similarVectors = [];
         foreach ($vectors as $v) {
+            if (!is_array($v['vector']) || empty($v['vector'])) {
+                continue; // Skip if no valid embedding vector
+            }
             $cosineSimilarity = $this->calculateCosineSimilarity($vector, $v['vector']);
             $similarVectors[] = [
                 'id' => $v['id'],
@@ -389,20 +391,20 @@ class ChatConversationService
         $dotProduct = 0;
         $vector1Normalization = 0;
         $vector2Normalization = 0;
-    
+
         foreach ($vector1 as $i => $value) {
             $dotProduct += $value * $vector2[$i];
             $vector1Normalization += $value * $value;
             $vector2Normalization += $vector2[$i] * $vector2[$i];
         }
-    
+
         $vector1Normalization = sqrt($vector1Normalization);
         $vector2Normalization = sqrt($vector2Normalization);
-    
+
         return $dotProduct / ($vector1Normalization * $vector2Normalization);
     }
 
-     /**
+    /**
      * Ask a question and generate a response.
      *
      * @return mixed The generated response.
@@ -429,7 +431,7 @@ class ChatConversationService
             $embededFiles = $this->model()->whereNull('vector')->whereHas('metas', function ($query) use ($chatbotCode) {
                 $query->where(function ($subQuery) use ($chatbotCode) {
                     $subQuery->where('key', 'chatbot_code')
-                             ->where('value', $chatbotCode);
+                        ->where('value', $chatbotCode);
                 });
             })->pluck('id')->toArray();
 

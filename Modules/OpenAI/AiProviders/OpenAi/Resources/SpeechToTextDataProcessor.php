@@ -41,11 +41,7 @@ class SpeechToTextDataProcessor
                 'type' => 'dropdown',
                 'label' => 'Models',
                 'name' => 'model',
-                'value' => [
-                    'gpt-4o-mini-transcribe',
-                    'gpt-4o-transcribe',
-                    'whisper-1',
-                ],
+                'value' => config('models.available.speech-to-text'),
                 'visibility' => true
             ],
             [

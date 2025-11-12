@@ -45,7 +45,7 @@
         </div>
         @if(count($aiProviders))
             <!-- Provider Name -->
-            <div class="flex flex-col mt-6">
+            <div class="flex flex-col mt-6 hidden">
                 <div class="font-normal custom-dropdown-arrow text-14 text-color-2C dark:text-white">
                     <label>{{ __('Choose Provider') }}</label>
                     <select class="select block w-full text-base leading-6 font-medium text-color-2C bg-white bg-clip-padding bg-no-repeat dark:bg-[#333332] rounded-xl dark:rounded-2xl m-0 focus:text-color-2C focus:bg-white focus:border-color-89 focus:outline-none" id="provider" name="provider">

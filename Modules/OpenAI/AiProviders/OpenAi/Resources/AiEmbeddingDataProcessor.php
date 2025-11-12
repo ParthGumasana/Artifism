@@ -30,11 +30,7 @@ class AiEmbeddingDataProcessor
                 'type' => 'dropdown',
                 'label' => 'Models',
                 'name' => 'model',
-                'value' => [
-                    'text-embedding-ada-002',
-                    'text-embedding-3-large',
-                    'text-embedding-3-small'
-                ],
+                'value' => config('models.available.ai-embedding'),
                 'required' => true
             ],
         ];
