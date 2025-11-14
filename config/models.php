@@ -7,8 +7,8 @@ return [
             'gpt-5-mini',
             'gpt-5-nano',
             'gpt-5-chat-latest',
-            'Model B', // gpt-4
-            'Model A', // gpt-3.5-turbo
+            'High', // gpt-4
+            'Good', // gpt-3.5-turbo
             'gpt-4o',
             'gpt-4o-mini',
             'o1-preview',
@@ -28,8 +28,8 @@ return [
             'gpt-5-chat-latest',
             'gpt-4o-mini',
             'gpt-4o',
-            'Model A', // gpt-3.5-turbo
-            'Model B', // gpt-4
+            'Good', // gpt-3.5-turbo
+            'High', // gpt-4
             'o1-preview',
             'o1-mini',
             'o1',
@@ -71,8 +71,8 @@ return [
             'gpt-5-chat-latest',
             'gpt-4o-mini',
             'gpt-4o',
-            'Model A', // gpt-3.5-turbo
-            'Model B', // gpt-4
+            'Good', // gpt-3.5-turbo
+            'High', // gpt-4
             'o1-preview',
             'o1-mini',
             'o1',
@@ -93,8 +93,8 @@ return [
             'gpt-5-mini',
             'gpt-5-nano',
             'gpt-5-chat-latest',
-            'Model B', // gpt-4
-            'Model A', // gpt-3.5-turbo
+            'High', // gpt-4
+            'Good', // gpt-3.5-turbo
             'gpt-4o',
             'gpt-4o-mini',
             'o1-preview',
@@ -108,7 +108,7 @@ return [
             'gpt-4.1-nano'
         ],
         'speech-to-text' => [
-            'Model A', // gpt-4o-mini-transcribe
+            'Good', // gpt-4o-mini-transcribe
             'gpt-4o-transcribe',
             'whisper-1',
         ],
@@ -117,8 +117,8 @@ return [
             'gpt-5-mini',
             'gpt-5-nano',
             'gpt-5-chat-latest',
-            'Model A', // gpt-3.5-turbo
-            'Model B', // gpt-4
+            'Good', // gpt-3.5-turbo
+            'High', // gpt-4
             'gpt-4o',
             'gpt-4o-mini',
             'o1-preview',
@@ -148,39 +148,39 @@ return [
         'voice-over' => [
             'TTS',
             'TTS HD',
-            'Model A' // 'GPT-4o Mini TTS'
+            'Good' // 'GPT-4o Mini TTS'
         ]
     ],
 
     'mapping' => [
         'chatbot'=>[
-            'Model A' => 'gpt-3.5-turbo',
-            'Model B' => 'gpt-4'
+            'Good' => 'gpt-3.5-turbo',
+            'High' => 'gpt-4'
         ],
         'ai-chat'=>[
-            'Model A' => 'gpt-3.5-turbo',
-            'Model B' => 'gpt-4'
+            'Good' => 'gpt-3.5-turbo',
+            'High' => 'gpt-4'
         ],
         'image' => [
-            'Model A' => 'dall-e-3'
+            'Good' => 'dall-e-3'
         ],
         'template-data' => [
-            'Model A' => 'gpt-3.5-turbo',
-            'Model B' => 'gpt-4'
+            'Good' => 'gpt-3.5-turbo',
+            'High' => 'gpt-4'
         ],
         'long-article' => [
-            'Model A' => 'gpt-3.5-turbo',
-            'Model B' => 'gpt-4'
+            'Good' => 'gpt-3.5-turbo',
+            'High' => 'gpt-4'
         ],
         'code' => [
-            'Model A' => 'gpt-3.5-turbo',
-            'Model B' => 'gpt-4',
+            'Good' => 'gpt-3.5-turbo',
+            'High' => 'gpt-4',
         ],
         'speech-to-text' => [
-            'Model A' => 'gpt-4o-mini-transcribe'
+            'Good' => 'gpt-4o-mini-transcribe'
         ],
         'voice-over' => [
-            'Model A' => 'GPT-4o Mini TTS'
+            'Good' => 'GPT-4o Mini TTS'
         ]
     ],
 ];
